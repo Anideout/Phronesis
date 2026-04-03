@@ -21,26 +21,26 @@ python -m spacy download es_core_news_sm
 
 ```bash
 # Análisis básico (txt o pdf)
-python analizador.py analizar kierkegaard.txt
-python analizador.py analizar hegel.pdf
+python angurri.py analizar kierkegaard.txt
+python angurri.py analizar hegel.pdf
 
 # Top 20 palabras frecuentes
-python analizador.py analizar texto.txt --top 20
+python angurri.py analizar texto.txt --top 20
 
 # Análisis por capítulos
-python analizador.py analizar texto.txt --capitulos
+python angurri.py analizar texto.txt --capitulos
 
 # Detectar entidades (personas, lugares)
-python analizador.py analizar texto.txt --entidades
+python angurri.py analizar texto.txt --entidades
 
 # Generar prosa pseudo-filosófica
-python analizador.py analizar texto.txt --markov
+python angurri.py analizar texto.txt --markov
 
 # Todo junto + exportar reporte
-python analizador.py analizar texto.pdf -c -e -m --exportar reporte.txt
+python angurri.py analizar texto.pdf -c -e -m --exportar reporte.txt
 
 # Ver estado de dependencias
-python analizador.py info
+python angurri.py info
 ```
 
 ## Flags
@@ -66,7 +66,7 @@ python analizador.py info
 
 ```
 analizador/
-├── analizador.py     ← script principal
+├── angurri.py     ← script principal
 ├── requirements.txt
 ├── corpus/           ← pon tus .txt y .pdf aquí
 └── output/           ← reportes exportados
