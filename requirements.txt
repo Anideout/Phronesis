@@ -1,0 +1,6 @@
+typer[all]
+rich 
+spacy 
+pdfplumber
+textblob
+markovify
