@@ -15,7 +15,7 @@ from rich import box
 import time
 
 # El motor que convertirá funciones en comandos de consola
-app = type.Typer(
+app = typer.Typer(
     name="Angurri",
     help="[bold purple] Phronesis[/]",
     # permite que las descripciones de ayuda tengan colores y estilos
@@ -97,7 +97,7 @@ def frecuencias(doc, top_n: int = 15):
     from collections import Counter
 
     tokens = [
-        t.lemma.lower()
+        t.lemma_.lower()
         for t in doc
         if not t.is_stop and not t.is_punct and not t.is_space and len(t.text) > 2
     ]
@@ -130,7 +130,7 @@ def analizar_sentimiento(texto: str):
 def detectar_entidades(doc):
     from collections import Counter
 
-    ents = [ent.text for ent in doc.ents if ent.label in ("PER", "LOC", "ORG", "MISC")]
+    ents = [ent.text for ent in doc.ents if ent.label_ in ("PER", "LOC", "ORG", "MISC")]
     return Counter(ents).most_common(10)
 
 
@@ -152,9 +152,9 @@ def dividir_capitulos(texto: str):
     # Si no hay marcadores, dividir en tercios
     n = len(texto)
     return {
-        "parte I": text[: n // 3],
+        "parte I": texto[: n // 3],
         "parte II": texto[n // 3 : 2 * n // 3],
-        "parte III": texto[2 * n // 3],
+        "parte III": texto[2 * n // 3 :],
     }
 
 
@@ -178,7 +178,7 @@ def generar_markov(texto: str, num_oraciones: int = 3):
             return "[dim] No se pudo genrar prosa (corpus muy pequeño.[/]"
         return " ".join(oraciones[:num_oraciones])
     except Exception as e:
-        return f"[dim]Error Markov: {0}[/]"
+        return f"[dim]Error Markov: {e}[/]"
 
 
 # Visualización---------------------------
@@ -200,11 +200,11 @@ def color_sentimiento(label: str) -> str:
 @app.command()
 def analizar(
     archivo: Path = typer.Argument(..., help="Ruta al .txt o .pdf a analizar"),
-    top: int = type.Option(10, "-top", "-n", help="N palabras más frecuentes"),
+    top: int = typer.Option(10, "-top", "-n", help="N palabras más frecuentes"),
     capitulos: bool = typer.Option(
         False, "--capitulos", "-C", help="Analizar por capitulos/partes"
     ),
-    markov: bool = Typer.Option(False, "--markov", "-m", help="Generar prosa"),
+    markov: bool = typer.Option(False, "--markov", "-m", help="Generar prosa"),
     entidades: bool = typer.Option(
         False, "--entidades", "-e", help="Mostrar entidades detectadas"
     ),
@@ -219,18 +219,18 @@ def analizar(
     console.print()
     console.print(
         Panel.fit(
-            "[bold pruple] Phronesis",
+            "[bold purple] Phronesis",
             border_style="purple",
         )
     )
     console.print()
 
     with Progress(
-        SpinnerColumn(), TextColumn("{task.description"), console=console
+        SpinnerColumn(), TextColumn("{task.description}"), console=console
     ) as prog:
         t1 = prog.add_task("Cargando texto...", total=None)
         texto = cargar_texto(archivo)
-        prog.update(t1, description="[green] Texto cargado![/]", complete=True)
+        prog.update(t1, description="[green] Texto cargado![/]", completed=True)
         time.sleep(0.2)
 
         t2 = prog.add_task("procesando con spacy...", total=None)
@@ -238,7 +238,9 @@ def analizar(
         # procesar en chunks si el texto es muy largo
         max_chars = 1_000_000
         doc = nlp(texto[:max_chars])
-        prog.update(t2, description="[green] Procesamiento NLP listo[/]", complete=True)
+        prog.update(
+            t2, description="[green] Procesamiento NLP listo[/]", completed=True
+        )
         time.sleep(0.2)
 
     palabras = texto.split()
@@ -249,7 +251,7 @@ def analizar(
 
     # --Estadisticas generales
     console.rule("[bold purple]Estadisticas generales[/]")
-    tabla = Table(box=box.SIMPLE, show_headeR=False, padding=(0, 2))
+    tabla = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))
     tabla.add_column(style="dim")
     tabla.add_column(style="bold")
     tabla.add_row("Palabras totales", f"{len(palabras):,}")
@@ -267,7 +269,7 @@ def analizar(
         maximo = freqs[0][1]
         for palabra, cnt in freqs:
             bar = barra(cnt, maximo, ancho=20)
-    console.print(f" [cyan]{palabra:<20}[/] {bar} [dim] {cnt}[/]")
+            console.print(f" [cyan]{palabra:<20}[/] {bar} [dim] {cnt}[/]")
     console.print()
 
     # ----Sentimiento general
@@ -295,7 +297,7 @@ def analizar(
     # --- Entidades
     if entidades:
         console.rule("[bold purple] entidades detectadas (NER) [/]")
-        ents = detectar__entidades(doc)
+        ents = detectar_entidades(doc)
         if ents:
             for ent, cnt in ents:
                 console.print(f"[magenta]{ent:<25}[/] [dim]x{cnt}[/]")
@@ -308,7 +310,7 @@ def analizar(
     if markov:
         console.rule("[bold purple] Prosa pseudo-filosófica (Markov)[/]")
         prosa = generar_markov(texto)
-        console.prnt(
+        console.print(
             Panel(
                 f"[italic]{prosa}[/italic]",
                 border_style="dim purple",
@@ -332,7 +334,7 @@ def analizar(
         for p, c in freqs:
             reporte.append(f"{p}, {c}")
         exportar.write_text("\n".join(reporte), encoding="utf-8")
-        console.print(f"[gree] Reporte guardado en[/] {exportar}")
+        console.print(f"[green] Reporte guardado en[/] {exportar}")
 
 
 @app.command()
@@ -351,7 +353,7 @@ def info():
     for lib, desc in deps.items():
         try:
             __import__(lib)
-            estado = "[gree] Instalado[/]"
+            estado = "[green] Instalado[/]"
         except ImportError:
             estado = "[red] falta[/]"
         console.print(f"{lib:<15} {estado} [dim]{desc}[/]")
